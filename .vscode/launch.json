@@ -2,13 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Bevy App",
+            "name": "Debug [sudoku]",
             "type": "lldb",
             "request": "launch",
             "cargo": {
                 "args": [
                     "run",
-                    "--bin=aegis"
+                    "--bin=sudoku"
                 ]
             },
             "env": {
