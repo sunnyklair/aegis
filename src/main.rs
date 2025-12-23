@@ -17,7 +17,7 @@ fn main() {
                 handle_cursor_input,
                 handle_mouse_hover,
                 update_cursor_position,
-            ).chain(), // Keyboard -> Mouse -> Position update (in that order)
+            ).chain(),
         )
         .add_plugins(DefaultPlugins)
         .run();
@@ -33,6 +33,10 @@ struct MenuItem {
     index: usize,
 }
 
+// Stores references to menu item entities for quick lookup
+#[derive(Resource)]
+struct MenuItems(Vec<Entity>);
+
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d::default());
     
@@ -41,14 +45,18 @@ fn setup(mut commands: Commands) {
         Transform::from_translation(Vec3::new(0.0, TITLE_Y, 0.0)),
     ));
     
+    // Spawn menu items and store their entity references
+    let mut menu_entities = Vec::new();
     for (index, &item_text) in MENU_ITEMS.iter().enumerate() {
         let y_pos = MENU_START_Y - (index as f32 * MENU_SPACING);
-        commands.spawn((
+        let entity = commands.spawn((
             Text2d::new(item_text),
             Transform::from_translation(Vec3::new(0.0, y_pos, 0.0)),
             MenuItem { index },
-        ));
+        )).id();
+        menu_entities.push(entity);
     }
+    commands.insert_resource(MenuItems(menu_entities));
     
     commands.spawn((
         Text2d::new(">"),
@@ -61,13 +69,14 @@ fn handle_cursor_input(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut cursor: Single<&mut MenuCursor>,
 ) {
+    use KeyCode::*;
     let max_index = MENU_ITEMS.len() - 1;
     
-    if keyboard.just_pressed(KeyCode::ArrowDown) || keyboard.just_pressed(KeyCode::KeyS) {
+    if keyboard.any_just_pressed([ArrowDown, KeyS]) {
         cursor.selected_index = (cursor.selected_index + 1).min(max_index);
     }
     
-    if keyboard.just_pressed(KeyCode::ArrowUp) || keyboard.just_pressed(KeyCode::KeyW) {
+    if keyboard.any_just_pressed([ArrowUp, KeyW]) {
         cursor.selected_index = cursor.selected_index.saturating_sub(1);
     }
 }
@@ -99,16 +108,17 @@ fn handle_mouse_hover(
 
 fn update_cursor_position(
     mut cursor_query: Query<(&MenuCursor, &mut Transform), Changed<MenuCursor>>,
-    menu_items: Query<(&MenuItem, &Transform), Without<MenuCursor>>,
+    menu_items: Res<MenuItems>,
+    transforms: Query<&Transform, Without<MenuCursor>>,
 ) {
     let Ok((menu_cursor, mut cursor_transform)) = cursor_query.single_mut() else {
         return; // No cursor changed this frame
     };
     
-    for (menu_item, item_transform) in menu_items.iter() {
-        if menu_item.index == menu_cursor.selected_index {
+    // Direct entity lookup - O(1) instead of O(n) search
+    if let Some(&entity) = menu_items.0.get(menu_cursor.selected_index) {
+        if let Ok(item_transform) = transforms.get(entity) {
             cursor_transform.translation.y = item_transform.translation.y;
-            break;
         }
     }
 }
