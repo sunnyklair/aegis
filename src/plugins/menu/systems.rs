@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use super::components::*;
 
-/// Main menu plugin with keyboard and mouse navigation
+// Main menu plugin with keyboard and mouse navigation
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
@@ -13,26 +14,8 @@ impl Plugin for MenuPlugin {
     }
 }
 
-const MENU_ITEMS: &[&str] = &["Start Game", "Quit"];
-const TITLE_Y: f32 = 200.0;
-const MENU_START_Y: f32 = 50.0;
-const MENU_SPACING: f32 = 50.0;
-const CURSOR_X_OFFSET: f32 = -100.0;
-const HOVER_THRESHOLD: f32 = 25.0;
-
-#[derive(Component)]
-struct MenuCursor {
-    selected_index: usize,
-}
-
-#[derive(Component)]
-struct MenuItem;
-
-/// Stores menu item entities in order (index = position in Vec)
-#[derive(Resource)]
-struct MenuItems(Vec<Entity>);
-
-fn setup_menu(mut commands: Commands) {
+/// Sets up the menu UI with title, menu items, and cursor
+pub fn setup_menu(mut commands: Commands) {
     commands.spawn((
         Text2d::new("Sudoku"),
         Transform::from_translation(Vec3::new(0.0, TITLE_Y, 0.0)),
@@ -62,7 +45,8 @@ fn setup_menu(mut commands: Commands) {
     ));
 }
 
-fn handle_menu_input(keyboard: Res<ButtonInput<KeyCode>>, mut cursor: Single<&mut MenuCursor>) {
+/// Handles keyboard navigation (arrow keys and WASD)
+pub fn handle_menu_input(keyboard: Res<ButtonInput<KeyCode>>, mut cursor: Single<&mut MenuCursor>) {
     use KeyCode::*;
     let max_index = MENU_ITEMS.len() - 1;
 
@@ -75,7 +59,8 @@ fn handle_menu_input(keyboard: Res<ButtonInput<KeyCode>>, mut cursor: Single<&mu
     }
 }
 
-fn handle_menu_hover(
+/// Handles mouse hover detection for menu items
+pub fn handle_menu_hover(
     mut cursor_moved: MessageReader<CursorMoved>,
     camera: Single<(&Camera, &GlobalTransform)>,
     menu_items: Res<MenuItems>,
@@ -103,7 +88,8 @@ fn handle_menu_hover(
     }
 }
 
-fn update_menu_cursor_position(
+/// Updates cursor position when selected menu item changes
+pub fn update_menu_cursor_position(
     mut cursor_query: Query<(&MenuCursor, &mut Transform), Changed<MenuCursor>>,
     menu_items: Res<MenuItems>,
     transforms: Query<&Transform, Without<MenuCursor>>,
@@ -119,3 +105,4 @@ fn update_menu_cursor_position(
         }
     }
 }
+
