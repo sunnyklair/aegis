@@ -2,23 +2,23 @@ use bevy::prelude::*;
 
 // Menu constants
 pub const MENU_ITEMS: &[&str] = &["Start Game", "Quit"];
-pub const TITLE_Y: f32 = 200.0;
-pub const MENU_START_Y: f32 = 50.0;
-pub const MENU_SPACING: f32 = 50.0;
-pub const CURSOR_X_OFFSET: f32 = -100.0;
-pub const HOVER_THRESHOLD: f32 = 25.0;
+pub const TITLE_FONT_SIZE: f32 = 48.0;
+pub const MENU_FONT_SIZE: f32 = 24.0;
+pub const MENU_SPACING: Val = Val::Px(10.0);
 
-// Tracks the currently selected menu item
+// Marker component for cursor indicator ("> ")
 #[derive(Component)]
 pub struct MenuCursor {
-    pub selected_index: usize,
+    pub item_index: usize,
 }
 
 // Marker component for menu item entities
 #[derive(Component)]
-pub struct MenuItem;
+pub struct MenuItem {
+    pub index: usize,
+}
 
-// Stores menu item entities in order (index = position in Vec)
+// Resource to track currently selected menu item
 #[derive(Resource)]
-pub struct MenuItems(pub Vec<Entity>);
+pub struct SelectedMenuItem(pub usize);
 
